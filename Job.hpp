@@ -4,19 +4,29 @@
 #define lli long long int
 
 enum Type {
-    wait, finish
+    wait, run, finish
 };
 
 class Job {
     public:
+        lli getId();
+        lli getSubmit();
+        lli getRun();
+        lli getWait();
+        lli getEnd();
+        int getNp();
+        Type getType();
+
+        friend class Simulator;
+
+    private:
         Job(lli, lli, lli, int, Type);
-        void calculateEnd();
 
         lli id;
         lli submitTime;
         lli runTime;
         lli waitTime;
-        lli endTime;
+        lli order;
         int np;
         Type type;
 };
