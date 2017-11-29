@@ -4,31 +4,28 @@ Job::Job(lli id, lli submit, lli run, int n, Type t) : id(id), submitTime(submit
 }
 
 lli Job::getId() {
-    return this->id;
+    return id;
 }
 
 lli Job::getSubmit() {
-    return this->submitTime;
+    return submitTime;
 }
 lli Job::getRun() {
-    return this->runTime;
+    return runTime;
 }
 
 lli Job::getWait() {
-    return this->waitTime;
+    return waitTime;
 }
 
 lli Job::getEnd() {
-    if(this->type == wait)
-        return -1;
-
-    return this->submitTime + this->waitTime + this->runTime;
+    return submitTime + waitTime + runTime;
 }
 
 int Job::getNp() {
-    return this->np;
+    return np;
 }
 
 Type Job::getType() {
-    return this->type;
+    return type;
 }
