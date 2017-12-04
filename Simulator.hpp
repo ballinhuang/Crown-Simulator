@@ -30,6 +30,7 @@ class Simulator {
         deque<Job> runQ;
         deque<Job> finishQ;
         void *handle;
+        bool webRequest;
 };
 
 

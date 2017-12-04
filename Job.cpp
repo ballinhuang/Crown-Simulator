@@ -1,6 +1,6 @@
 #include "Job.hpp"
 
-Job::Job(lli id, lli submit, lli run, int n, Type t) : id(id), submitTime(submit), runTime(run), np(n), type(t) {
+Job::Job(lli id, lli submit, lli run, lli req, int n, Type t) : id(id), submitTime(submit), runTime(run), requestTime(req), np(n), type(t) {
 }
 
 lli Job::getId() {
@@ -11,7 +11,7 @@ lli Job::getSubmit() {
     return this->submitTime;
 }
 lli Job::getRun() {
-    return this->runTime;
+    return this->requestTime;
 }
 
 lli Job::getWait() {
@@ -22,7 +22,7 @@ lli Job::getEnd() {
     if(this->type == wait)
         return -1;
 
-    return this->submitTime + this->waitTime + this->runTime;
+    return this->submitTime + this->waitTime + this->requestTime;
 }
 
 int Job::getNp() {

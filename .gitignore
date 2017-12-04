@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+#VScode & test file
+*.json
+*.swf
+*.result

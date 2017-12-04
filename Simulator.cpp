@@ -10,43 +10,52 @@ using namespace std;
 
 Simulator::Simulator() {
     orderCounter = 0;
+    webRequest = false;
 }
 
 bool Simulator::finishQcmp(const Job a, const Job b) {
-    return a.submitTime < b.submitTime;
+    return a.id < b.id;
 }
 
 void Simulator::storeOutcome() {
-    stringstream ss;
-    double sumWait = 0.0;
+    double sumWait = 0.0, sumTurnaround = 0.0;
 
     sort(finishQ.begin(), finishQ.end(), finishQcmp);
 
-    ss << setw(10) << "Job ID" << setw(15) << "Submit Time" << setw(15) << "Run Time" << setw(15) << "Wait Time" << setw(15) << "NP" << setw(15) << "Run Order" << endl;
     for(deque<Job>::iterator di = finishQ.begin(); di != finishQ.end(); di++) {
-        ss << setw(10) << di->id << setw(15) << di->submitTime << setw(15) << di->runTime << setw(15) << di->waitTime << setw(15) << di->np << setw(15) << di->order << endl;
         sumWait += di->waitTime;
+        sumTurnaround += di->waitTime + di->runTime;
+    }
+
+    if(webRequest) {
+        cout << fixed << setprecision(2) << sumWait / finishQ.size() << endl;
+        cout << fixed << setprecision(2) << sumTurnaround / finishQ.size() << endl;
+        for(deque<Job>::iterator di = finishQ.begin(); di != finishQ.end(); di++)
+            cout << setw(10) << di->id << setw(15) << di->submitTime << setw(15) << (di->runTime > di->requestTime ? di->requestTime : di->runTime) << setw(15) << di->waitTime << setw(15) << di->np << setw(15) << di->order << endl;
+
+        return;
     }
 
     fstream output;
 
-    fileName += ".result";
-    output.open(fileName.c_str(), ios::out);
+    output.open((fileName + ".result").c_str(), ios::out);
     if(!output.is_open()) {
         cout << "store result failed!" << endl;
         exit(1);
     }
 
-    cout << "The sum of waiting time is " << fixed << setprecision(0) << sumWait << endl;
-    output << "The sum of waiting time is " << fixed << setprecision(0) << sumWait << endl;
-    cout << "The average waiting time is " << fixed << setprecision(2) << sumWait / finishQ.size() << endl;
     output << "The average waiting time is " << fixed << setprecision(2) << sumWait / finishQ.size() << endl;
-    output << endl << ss.str();
+    output << "The average turnaround time is " << fixed << setprecision(2) << sumTurnaround / finishQ.size() << endl;
+
+    output << setw(10) << "Job ID" << setw(15) << "Submit Time" << setw(15) << "Run Time" << setw(15) << "Wait Time" << setw(15) << "NP" << setw(15) << "Run Order" << endl;
+    for(deque<Job>::iterator di = finishQ.begin(); di != finishQ.end(); di++)
+        output << setw(10) << di->id << setw(15) << di->submitTime << setw(15) << (di->runTime > di->requestTime ? di->requestTime : di->runTime) << setw(15) << di->waitTime << setw(15) << di->np << setw(15) << di->order << endl;
 }
 
 void Simulator::executeJob(deque<Job> doJob) {
     for(deque<Job>::iterator di = doJob.begin(); di != doJob.end(); di++) {
         di->waitTime = timer - di->submitTime;
+        di->endTime = timer + di->runTime;
         di->order = ++orderCounter;
         allNp -= di->np;
 
@@ -65,9 +74,9 @@ void Simulator::executeJob(deque<Job> doJob) {
             if(dj->type == wait)
                 t = dj->submitTime;
             else
-                t = dj->getEnd();
+                t = dj->endTime;
 
-            if(t >= di->getEnd()) {
+            if(t >= di->endTime) {
                 eventQ.insert(dj, *di);
                 flag = false;
                 break;
@@ -121,7 +130,7 @@ void Simulator::loadEvents() {
     }
 
     while(data >> temp) {
-        lli subT = 0, runT = 0;
+        lli subT = 0, runT = 0, reqT = 0;
         int np = 0;
         Type t;
 
@@ -129,11 +138,16 @@ void Simulator::loadEvents() {
         data >> temp;
         data >> runT;
         data >> np;
-
-        for(int i = 0; i < 13; i++)
+        for(int i = 6; i <= 8; i++)
+            data >> temp;
+        data >> reqT;
+        for(int i = 10; i <= 18; i++)
             data >> temp;
 
-        Job j(++counter, subT, runT, np, wait);
+        if(reqT == -1)
+            reqT = runT;
+        
+        Job j(++counter, subT, runT, reqT, np, wait);
         eventQ.push_back(j);
     }
 
@@ -150,6 +164,8 @@ void Simulator::fight(int argc, char **argv) {
             allNp = atoi(argv[++i]);
         else if(!strcmp(argv[i], "-m"))
             scheduleMode += string(argv[++i]);
+        else if(!strcmp(argv[i], "-web"))
+            webRequest = true;
     }
 
     // check number of all of np
@@ -160,7 +176,6 @@ void Simulator::fight(int argc, char **argv) {
 
     // load events in the log file
     loadEvents();
-    cout << "eventQ's size is " << eventQ.size() << endl;
     
     // dynamic load the library
     loadScheduler(scheduleMode);
@@ -176,7 +191,7 @@ void Simulator::fight(int argc, char **argv) {
             waitQ.push_back(j);
         }
         else {
-            timer = j.getEnd();
+            timer = j.endTime;
             allNp += j.np;
             removeRunJob(j);
         }
@@ -186,7 +201,6 @@ void Simulator::fight(int argc, char **argv) {
     }
 
     storeOutcome();
-    cout << "finishQ's size is " << finishQ.size() << endl;
 
     dlclose(handle);
 }

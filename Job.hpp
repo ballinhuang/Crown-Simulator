@@ -20,12 +20,14 @@ class Job {
         friend class Simulator;
 
     private:
-        Job(lli, lli, lli, int, Type);
+        Job(lli, lli, lli, lli, int, Type);
 
         lli id;
         lli submitTime;
         lli runTime;
+        lli requestTime;
         lli waitTime;
+        lli endTime;
         lli order;
         int np;
         Type type;
