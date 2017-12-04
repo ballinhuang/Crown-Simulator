@@ -120,8 +120,6 @@ void Simulator::loadScheduler(string mode) {
 
 void Simulator::loadEvents() {
     fstream data;
-    double temp = 0.0;
-    lli counter = 0;
     
     data.open(fileName.c_str(), ios::in);
     if(!data.is_open()) {
@@ -129,11 +127,12 @@ void Simulator::loadEvents() {
         exit(1);
     }
 
-    while(data >> temp) {
-        lli subT = 0, runT = 0, reqT = 0;
-        int np = 0, status = 0;
-        Type t;
 
+    double temp = 0.0;
+    lli id = 0, subT = 0, runT = 0, reqT = 0;
+    int np = 0, status = 0;
+
+    while(data >> id) {
         data >> subT;
         data >> temp;
         data >> runT;
@@ -152,7 +151,7 @@ void Simulator::loadEvents() {
         if(reqT == -1)
             reqT = runT;
         
-        Job j(++counter, subT, runT, reqT, np, wait);
+        Job j(id, subT, runT, reqT, np, wait);
         eventQ.push_back(j);
     }
 
