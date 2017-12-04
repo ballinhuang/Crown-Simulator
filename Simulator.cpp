@@ -31,7 +31,7 @@ void Simulator::storeOutcome() {
         cout << fixed << setprecision(2) << sumWait / finishQ.size() << endl;
         cout << fixed << setprecision(2) << sumTurnaround / finishQ.size() << endl;
         for(deque<Job>::iterator di = finishQ.begin(); di != finishQ.end(); di++)
-            cout << setw(10) << di->id << setw(15) << di->submitTime << setw(15) << (di->runTime > di->requestTime ? di->requestTime : di->runTime) << setw(15) << di->waitTime << setw(15) << di->np << setw(15) << di->order << endl;
+            cout << " " << di->id << " " << di->submitTime << " " << (di->runTime > di->requestTime ? di->requestTime : di->runTime) << " " << di->waitTime << " " << di->np << " " << di->order << endl;
 
         return;
     }
@@ -131,7 +131,7 @@ void Simulator::loadEvents() {
 
     while(data >> temp) {
         lli subT = 0, runT = 0, reqT = 0;
-        int np = 0;
+        int np = 0, status = 0;
         Type t;
 
         data >> subT;
@@ -141,8 +141,13 @@ void Simulator::loadEvents() {
         for(int i = 6; i <= 8; i++)
             data >> temp;
         data >> reqT;
-        for(int i = 10; i <= 18; i++)
+        data >> temp;
+        data >> status;
+        for(int i = 12; i <= 18; i++)
             data >> temp;
+
+        if(status != 1)
+            continue;
 
         if(reqT == -1)
             reqT = runT;
